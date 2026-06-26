@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --sidebar-width: 256px;
+  --sidebar-collapsed-width: 80px;
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-[#141414]/80 backdrop-blur-sm border border-[#2d2d2d];
+  }
+
+  .transition-sidebar {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-[#2d2d2d] rounded-full;
+  }
+}
+
+body {
+  @apply bg-[#0f0f0f] text-gray-300;
+}
