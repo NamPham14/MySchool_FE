@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { useGetClassesQuery, useCreateClassMutation, useUpdateClassMutation, useDeleteClassMutation } from '../store/api/academicApi';
-import { Plus, Search, Edit2, Trash2, Users, X } from 'lucide-react';
+import { Plus, Search, Edit2, Users, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import ConfirmModal from '../components/common/ConfirmModal';
+
 
 const ClassesPage = () => {
   const [page, setPage] = useState(0);

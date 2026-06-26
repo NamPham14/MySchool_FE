@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "./baseApi";
 import type { 
   SchoolClassPageResponse, 
@@ -155,6 +156,20 @@ export const academicApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Grades"],
     }),
+    importGradesExcel: builder.mutation<APIResponse<string>, { file: File, subjectId: number, semesterId: number }>({
+      query: ({ file, subjectId, semesterId }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("subjectId", subjectId.toString());
+        formData.append("semesterId", semesterId.toString());
+        return {
+          url: `/grades/import`,
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: ["Grades"],
+    }),
 
     // Users API
     getTeachers: builder.query<APIResponse<any[]>, void>({
@@ -197,7 +212,7 @@ export const academicApi = baseApi.injectEndpoints({
     // Fees API
     getAllInvoices: builder.query<APIResponse<any[]>, { semesterId?: number; classId?: number | null }>({
       query: ({ semesterId, classId }) => {
-        let params = new URLSearchParams();
+        const params = new URLSearchParams();
         if (semesterId) params.append("semesterId", semesterId.toString());
         if (classId) params.append("classId", classId.toString());
         return `/fees?${params.toString()}`;
@@ -293,6 +308,7 @@ export const {
   useDeleteAssignmentMutation,
   useGetStudentGradesByClassAndSubjectQuery,
   useInputGradeMutation,
+  useImportGradesExcelMutation,
   useGetTeachersQuery,
   useGetStudentsByClassQuery,
   useCreateStudentMutation,

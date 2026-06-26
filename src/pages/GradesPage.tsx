@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   useGetClassesQuery, 
   useGetSubjectsQuery,
   useGetSemestersQuery,
   useGetStudentGradesByClassAndSubjectQuery,
-  useInputGradeMutation
+  useInputGradeMutation,
+  useImportGradesExcelMutation
 } from '../store/api/academicApi';
-import { GraduationCap, Save, CheckCircle2, User, BookOpen } from 'lucide-react';
+import { GraduationCap, Save, CheckCircle2, User, BookOpen, Download, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const GradesPage = () => {
@@ -32,21 +33,56 @@ const GradesPage = () => {
   );
 
   const [inputGrade, { isLoading: isSaving }] = useInputGradeMutation();
+  const [importGradesExcel, { isLoading: isImporting }] = useImportGradesExcelMutation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const students = gradesData?.data || [];
+
+  const handleExportTemplate = () => {
+    if (!selectedClassId) return;
+    const url = `http://localhost:8080/api/grades/class/${selectedClassId}/export-template`;
+    window.open(url, '_blank');
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!selectedSubjectId) {
+      toast.error('Vui lòng chọn Môn Học trước khi Import!');
+      return;
+    }
+    
+    const toastId = toast.loading('Đang Import điểm vào hệ thống...');
+    try {
+      await importGradesExcel({ 
+        file, 
+        subjectId: selectedSubjectId, 
+        semesterId: selectedSemesterId 
+      }).unwrap();
+      
+      toast.success('Import điểm thành công!', { id: toastId });
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Lỗi khi import điểm', { id: toastId });
+    }
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   // Set default selections
   useEffect(() => {
     if (classesData?.data?.content?.length && !selectedClassId) {
-      setSelectedClassId(classesData.data.content[0].id);
+      setTimeout(() => setSelectedClassId(classesData.data.content[0].id), 0);
     }
     if (subjectsData?.data?.content?.length && !selectedSubjectId) {
-      setSelectedSubjectId(subjectsData.data.content[0].id);
-    }
-    if (semestersData?.data?.content?.length && selectedSemesterId === 1) {
-      // Keep 1 as default or use the first one if we want
-      // For now, if the user hasn't changed it, let's keep it to the first fetched semester if 1 doesn't exist,
-      // but usually ID=1 is Semester 1.
+      setTimeout(() => setSelectedSubjectId(subjectsData.data.content[0].id), 0);
     }
   }, [classesData, subjectsData, semestersData, selectedClassId, selectedSubjectId]);
 
@@ -246,21 +282,47 @@ const GradesPage = () => {
             Sĩ số: <strong className="ml-1 text-gray-900">{students.length}</strong>
           </div>
           
-          <button 
-            onClick={handleSaveAll}
-            disabled={!anyChanges || isSaving}
-            className={`flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
-              anyChanges && !isSaving
-                ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-sm' 
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isSaving ? (
-              <span className="flex items-center"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div> Đang lưu...</span>
-            ) : (
-              <><Save className="w-4 h-4 mr-2" /> Lưu tất cả thay đổi</>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <input 
+              type="file" 
+              accept=".xlsx, .xls" 
+              ref={fileInputRef} 
+              className="hidden" 
+              onChange={handleFileChange} 
+            />
+            
+            <button 
+              onClick={handleExportTemplate}
+              disabled={!selectedClassId}
+              className="flex items-center px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <Download className="w-4 h-4 mr-2" /> Tải file mẫu
+            </button>
+            
+            <button 
+              onClick={handleImportClick}
+              disabled={!selectedSubjectId || isImporting}
+              className="flex items-center px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <Upload className="w-4 h-4 mr-2" /> {isImporting ? 'Đang xử lý...' : 'Nhập từ Excel'}
+            </button>
+
+            <button 
+              onClick={handleSaveAll}
+              disabled={!anyChanges || isSaving}
+              className={`flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
+                anyChanges && !isSaving
+                  ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-sm' 
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {isSaving ? (
+                <span className="flex items-center"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div> Đang lưu...</span>
+              ) : (
+                <><Save className="w-4 h-4 mr-2" /> Lưu tất cả thay đổi</>
+              )}
+            </button>
+          </div>
         </div>
 
         {isLoadingGrades ? (

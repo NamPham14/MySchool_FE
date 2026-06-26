@@ -98,6 +98,9 @@ export const baseApi = createApi({
     "Leaves",
     "Timetables",
     "Notifications",
+    "Fees",
+    "Grades",
+    "Chat"
   ],
   endpoints: (builder) => ({
     login: builder.mutation<APIResponse<AuthResponse>, LoginRequest>({

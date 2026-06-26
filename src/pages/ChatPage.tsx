@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Phone, Video, MoreVertical, Search, Image as ImageIcon, Paperclip, Smile, Check, CheckCheck } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';

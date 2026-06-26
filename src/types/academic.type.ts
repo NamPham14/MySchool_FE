@@ -62,6 +62,19 @@ export interface AssignmentRequest {
   dueDate: string;
 }
 
+export interface AssignmentResponse {
+  id: number;
+  classId: number;
+  subjectId: number;
+  subjectName: string;
+  teacherId: number;
+  title: string;
+  description: string;
+  imageUrl: string;
+  dueDate: string;
+  createdAt?: string;
+}
+
 export interface StudentGradeResponse {
   studentId: number;
   studentName: string;

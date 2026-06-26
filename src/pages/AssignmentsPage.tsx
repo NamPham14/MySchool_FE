@@ -48,7 +48,7 @@ const AssignmentsPage = () => {
   // Set default class when classes are loaded
   React.useEffect(() => {
     if (classesData?.data?.content?.length && !selectedClassId) {
-      setSelectedClassId(classesData.data.content[0].id);
+      setTimeout(() => setSelectedClassId(classesData.data.content[0].id), 0);
     }
   }, [classesData, selectedClassId]);
 

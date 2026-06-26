@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { 
   useGetAllEventsQuery,
@@ -122,7 +123,7 @@ const EventsPage = () => {
       setForm(prev => ({ ...prev, imageUrl: res.data }));
       toast.success('Tải ảnh lên thành công!');
     } catch (err: any) {
-      toast.error('Lỗi khi tải ảnh lên');
+      toast.error('Lỗi khi tải ảnh lên',err);
     }
   };
 
