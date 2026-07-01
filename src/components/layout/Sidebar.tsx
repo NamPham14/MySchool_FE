@@ -23,6 +23,7 @@ export const NAV_ITEMS = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Tổng quan' },
   { path: '/classes', icon: Users, label: 'Lớp học' },
   { path: '/students', icon: UserCheck, label: 'Học sinh' },
+  { path: '/teachers', icon: GraduationCap, label: 'Giáo viên' },
   { path: '/subjects', icon: BookOpen, label: 'Môn học' },
   { path: '/timetables', icon: CalendarDays, label: 'Thời khóa biểu' },
   { path: '/assignments', icon: ClipboardList, label: 'Bài tập' },

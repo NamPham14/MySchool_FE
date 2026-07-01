@@ -8,10 +8,12 @@ import TimetablesPage from './pages/TimetablesPage';
 import AssignmentsPage from './pages/AssignmentsPage';
 import GradesPage from './pages/GradesPage';
 import StudentsPage from './pages/StudentsPage';
+import TeachersPage from './pages/TeachersPage';
 import LeavesPage from './pages/LeavesPage';
 import FeesPage from './pages/FeesPage';
 import EventsPage from './pages/EventsPage';
 import ChatPage from './pages/ChatPage';
+import DashboardPage from './pages/DashboardPage';
 import { useAuth } from './hooks/useAuth';
 
 function RootRedirect() {
@@ -42,9 +44,10 @@ function App() {
             } 
           >
             {/* All protected pages go here */}
-            <Route path="/dashboard" element={<div className="p-8 text-2xl font-bold text-gray-900">Welcome to MyFSchool Dashboard!</div>} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/classes" element={<ClassesPage />} />
             <Route path="/students" element={<StudentsPage />} />
+            <Route path="/teachers" element={<TeachersPage />} />
             <Route path="/subjects" element={<SubjectsPage />} />
             <Route path="/timetables" element={<TimetablesPage />} />
             <Route path="/assignments" element={<AssignmentsPage />} />

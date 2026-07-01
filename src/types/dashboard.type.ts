@@ -1,19 +1,23 @@
 import type { APIResponse } from "./common.type";
 
-
-export interface RevenueChartData {
-    month: string;
-    amount: number;
+export interface StudentByGradeData {
+  name: string;
+  students: number;
 }
 
-export interface DashboardResponse {
-  totalRevenueMonth: number;
-  rentRevenueMonth: number;
-  otherRevenueMonth: number;
-  totalRooms: number;    occupiedRooms: number;
-    availableRooms: number;
-    unpaidInvoices: number;
-    revenueChart: RevenueChartData[];
+export interface RevenueByMonthData {
+  month: string;
+  revenue: number;
 }
 
-export type DashboardSummaryResponse = APIResponse<DashboardResponse>;
+export interface DashboardOverviewResponse {
+  totalStudents: number;
+  totalTeachers: number;
+  totalClasses: number;
+  pendingLeaveRequests: number;
+  totalRevenue: number;
+  studentChartData: StudentByGradeData[];
+  revenueChartData: RevenueByMonthData[];
+}
+
+export type DashboardAPIResponse = APIResponse<DashboardOverviewResponse>;
