@@ -39,8 +39,8 @@ const GradesPage = () => {
   const students = gradesData?.data || [];
 
   const handleExportTemplate = () => {
-    if (!selectedClassId) return;
-    const url = `http://localhost:8080/api/grades/class/${selectedClassId}/export-template`;
+    if (!selectedClassId || !selectedSubjectId) return;
+    const url = `http://localhost:8080/api/grades/class/${selectedClassId}/export-template?subjectId=${selectedSubjectId}&semesterId=${selectedSemesterId}`;
     window.open(url, '_blank');
   };
 
