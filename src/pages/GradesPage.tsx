@@ -88,9 +88,10 @@ const GradesPage = () => {
 
   // Sync loaded grades to local editing state
   useEffect(() => {
-    if (students.length > 0) {
+    const currentStudents = gradesData?.data || [];
+    if (currentStudents.length > 0) {
       const initialGrades: Record<number, any> = {};
-      students.forEach((student: any) => {
+      currentStudents.forEach((student: any) => {
         initialGrades[student.studentId] = {
           midtermScore: student.midtermScore !== undefined && student.midtermScore !== null ? student.midtermScore : '',
           finalScore: student.finalScore !== undefined && student.finalScore !== null ? student.finalScore : ''
@@ -100,7 +101,7 @@ const GradesPage = () => {
     } else {
       setEditingGrades({});
     }
-  }, [students]);
+  }, [gradesData]);
 
   const handleGradeChange = (studentId: number, field: 'midtermScore' | 'finalScore', value: string) => {
     // Allows empty string or valid numbers between 0 and 10

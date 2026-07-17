@@ -1,4 +1,4 @@
-import { Menu, Bell, Search, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, Bell, Search, LogOut, ChevronDown, Award, Calendar, FileText } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useGetMyInfoQuery } from '../../store/api/baseApi';
 import { useGetUnreadCountQuery, useGetNotificationsQuery, useMarkAsReadMutation, useMarkAllAsReadMutation } from '../../store/api/notificationApi';
@@ -75,44 +75,86 @@ const Header = ({ setSidebarOpen }: HeaderProps) => {
           
           {/* Notification Dropdown */}
           {isNotifOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
-              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="font-semibold text-gray-900">Thông báo</h3>
+            <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 transform origin-top-right transition-all">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-gray-900 text-base">Thông báo</h3>
+                  {unreadCount > 0 && (
+                    <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {unreadCount} mới
+                    </span>
+                  )}
+                </div>
                 <button 
                   onClick={() => markAllAsRead()}
-                  className="text-xs text-orange-500 hover:text-orange-600 font-medium"
+                  className="text-xs text-gray-500 hover:text-orange-600 font-medium transition-colors"
                 >
-                  Đánh dấu tất cả đã đọc
+                  Đánh dấu đã đọc
                 </button>
               </div>
-              <div className="max-h-96 overflow-y-auto">
+              
+              <div className="max-h-[28rem] overflow-y-auto custom-scrollbar">
                 {notifications.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500 text-sm">
-                    Không có thông báo nào.
+                  <div className="p-8 text-center flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                      <Bell className="h-8 w-8 text-gray-300" />
+                    </div>
+                    <p className="text-gray-500 text-sm font-medium">Bạn chưa có thông báo nào.</p>
                   </div>
                 ) : (
-                  notifications.map((notif: any) => (
-                    <div 
-                      key={notif.id} 
-                      onClick={() => {
-                        if (!notif.isRead) markAsRead(notif.id);
-                        setIsNotifOpen(false);
-                        if (notif.type === 'GRADE') navigate('/grades');
-                        else if (notif.type === 'LEAVE') navigate('/leaves');
-                        else if (notif.type === 'ASSIGNMENT') navigate('/assignments');
-                      }}
-                      className={`p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!notif.isRead ? 'bg-orange-50/30' : ''}`}
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className={`text-sm ${!notif.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
-                          {notif.title}
-                        </h4>
-                        {!notif.isRead && <span className="w-2 h-2 bg-orange-500 rounded-full mt-1.5 flex-shrink-0"></span>}
+                  notifications.map((notif: any) => {
+                    let NotifIcon = Bell;
+                    let iconBg = 'bg-blue-100 text-blue-600';
+                    if (notif.type === 'GRADE') { NotifIcon = Award; iconBg = 'bg-green-100 text-green-600'; }
+                    else if (notif.type === 'LEAVE') { NotifIcon = Calendar; iconBg = 'bg-purple-100 text-purple-600'; }
+                    else if (notif.type === 'ASSIGNMENT') { NotifIcon = FileText; iconBg = 'bg-orange-100 text-orange-600'; }
+
+                    return (
+                      <div 
+                        key={notif.id} 
+                        onClick={() => {
+                          if (!notif.isRead) markAsRead(notif.id);
+                          setIsNotifOpen(false);
+                          if (notif.type === 'GRADE') navigate('/grades');
+                          else if (notif.type === 'LEAVE') navigate('/leaves');
+                          else if (notif.type === 'ASSIGNMENT') navigate('/assignments');
+                        }}
+                        className={`p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors flex gap-3 relative ${!notif.isRead ? 'bg-orange-50/20' : ''}`}
+                      >
+                        {!notif.isRead && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
+                        )}
+                        
+                        <div className={`mt-0.5 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notif.isRead ? 'bg-gray-100 text-gray-400' : iconBg}`}>
+                          <NotifIcon className="h-5 w-5" />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`text-sm mb-0.5 ${!notif.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-600'}`}>
+                            {notif.title}
+                          </h4>
+                          <p className={`text-xs line-clamp-2 ${!notif.isRead ? 'text-gray-600' : 'text-gray-400'}`}>
+                            {notif.message || notif.content}
+                          </p>
+                          {notif.createdAt && (
+                            <p className="text-[10px] text-gray-400 mt-1.5 font-medium">
+                              {new Date(notif.createdAt).toLocaleDateString('vi-VN')} {new Date(notif.createdAt).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 line-clamp-2">{notif.message || notif.content}</p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
+              </div>
+              
+              <div className="p-3 border-t border-gray-100 bg-gray-50/50 text-center">
+                <button 
+                  onClick={() => { setIsNotifOpen(false); navigate('/notifications'); }}
+                  className="text-sm font-semibold text-orange-600 hover:text-orange-700"
+                >
+                  Xem tất cả thông báo
+                </button>
               </div>
             </div>
           )}

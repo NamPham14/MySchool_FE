@@ -11,7 +11,8 @@ import {
   Bell, 
   CreditCard,
   MessageSquare,
-  Calendar
+  Calendar,
+  Megaphone
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,8 +31,8 @@ export const NAV_ITEMS = [
   { path: '/grades', icon: GraduationCap, label: 'Điểm số' },
   { path: '/leaves', icon: FileText, label: 'Đơn từ' },
   { path: '/fees', icon: CreditCard, label: 'Học phí' },
-  { path: '/chat', icon: MessageSquare, label: 'Tin nhắn' },
   { path: '/events', icon: Calendar, label: 'Sự kiện' },
+  { path: '/announcements', icon: Megaphone, label: 'Bảng tin Lớp' },
   { path: '/notifications', icon: Bell, label: 'Thông báo' },
 ];
 

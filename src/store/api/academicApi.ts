@@ -268,22 +268,25 @@ export const academicApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // CHAT ENDPOINTS
-    getConversations: builder.query<APIResponse<any>, void>({
-      query: () => "/v1/conversations",
-      providesTags: ["Chat"],
+    // ANNOUNCEMENTS API
+    getAnnouncementsByClass: builder.query<APIResponse<any[]>, number>({
+      query: (classId) => `/announcements/class/${classId}`,
+      providesTags: (result, error, arg) => [{ type: "Announcements", id: arg }],
     }),
-    getMessages: builder.query<APIResponse<any>, number>({
-      query: (conversationId) => `/v1/conversations/${conversationId}/messages`,
-      providesTags: (result, error, arg) => [{ type: "Chat", id: arg }],
-    }),
-    sendMessage: builder.mutation<APIResponse<any>, { conversationId: number, content: string }>({
-      query: ({ conversationId, content }) => ({
-        url: `/v1/conversations/${conversationId}/messages`,
+    createAnnouncement: builder.mutation<APIResponse<any>, { classId: number; title: string; content: string }>({
+      query: (body) => ({
+        url: `/announcements`,
         method: "POST",
-        body: { content },
+        body,
       }),
-      invalidatesTags: (result, error, arg) => [{ type: "Chat", id: arg.conversationId }],
+      invalidatesTags: (result, error, arg) => [{ type: "Announcements", id: arg.classId }],
+    }),
+    deleteAnnouncement: builder.mutation<APIResponse<string>, { id: number; classId: number }>({
+      query: ({ id }) => ({
+        url: `/announcements/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, arg) => [{ type: "Announcements", id: arg.classId }],
     }),
   }),
 });
@@ -323,7 +326,7 @@ export const {
   useUpdateEventMutation,
   useDeleteEventMutation,
   useUploadFileMutation,
-  useGetConversationsQuery,
-  useGetMessagesQuery,
-  useSendMessageMutation,
+  useGetAnnouncementsByClassQuery,
+  useCreateAnnouncementMutation,
+  useDeleteAnnouncementMutation,
 } = academicApi;

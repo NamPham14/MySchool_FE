@@ -12,7 +12,7 @@ import TeachersPage from './pages/TeachersPage';
 import LeavesPage from './pages/LeavesPage';
 import FeesPage from './pages/FeesPage';
 import EventsPage from './pages/EventsPage';
-import ChatPage from './pages/ChatPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
 import DashboardPage from './pages/DashboardPage';
 import { useAuth } from './hooks/useAuth';
 
@@ -55,7 +55,7 @@ function App() {
             <Route path="/leaves" element={<LeavesPage />} />
             <Route path="/fees" element={<FeesPage />} />
             <Route path="/events" element={<EventsPage />} />
-            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/notifications" element={<div className="p-4 bg-white rounded-2xl shadow-sm h-96 flex items-center justify-center text-gray-400">Thông báo sẽ hiển thị ở đây</div>} />
           </Route>
           <Route path="*" element={<Navigate to="/" />} />
