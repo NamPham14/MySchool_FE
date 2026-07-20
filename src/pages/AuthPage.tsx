@@ -1,39 +1,50 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLoginMutation } from '../store/api/baseApi';
+import { useLoginMutation, useGoogleLoginMutation } from '../store/api/baseApi';
 import { useDispatch } from 'react-redux';
 import { setAuth } from '../store/authSlice';
 import toast from 'react-hot-toast';
 import { Phone, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useGoogleLogin as useReactOAuthGoogleLogin } from '@react-oauth/google';
+import axios from 'axios';
 
 const AuthPage = () => {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [login, { isLoading }] = useLoginMutation();
+  const [googleLogin, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phoneNumber || !password) {
-      toast.error('Vui lòng nhập đầy đủ Số điện thoại và Mật khẩu!');
-      return;
-    }
+  const loginWithGoogle = useReactOAuthGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfo = await axios.get(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } },
+        );
+        
+        const email = userInfo.data.email;
+        if (!email) {
+          toast.error("Không lấy được email từ Google.");
+          return;
+        }
 
-    try {
-      const response = await login({ phoneNumber, password }).unwrap();
-      if (response.code === 1000 && response.data) {
-        dispatch(setAuth({ accessToken: response.data.token, refreshToken: response.data.refreshToken }));
-        toast.success('Đăng nhập thành công!');
-        navigate('/dashboard');
-      } else {
-        toast.error(response.message || 'Đăng nhập thất bại!');
+        const response = await googleLogin({ email }).unwrap();
+        if (response.code === 1000 && response.data) {
+          dispatch(setAuth({ accessToken: response.data.token, refreshToken: response.data.refreshToken }));
+          toast.success('Đăng nhập bằng Google thành công!');
+          navigate('/dashboard');
+        } else {
+          toast.error(response.message || 'Đăng nhập thất bại!');
+        }
+      } catch (err: any) {
+        toast.error(err?.data?.message || 'Email này chưa được đăng ký trong hệ thống!');
       }
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Sai số điện thoại hoặc mật khẩu!');
-    }
+    },
+    onError: errorResponse => toast.error('Đăng nhập Google thất bại!'),
+  });
+
+  const handleGoogleLogin = () => {
+    loginWithGoogle();
   };
 
   return (
@@ -56,83 +67,30 @@ const AuthPage = () => {
           <p className="text-gray-500 text-sm font-medium mt-4">Hệ thống quản lý trường học thông minh</p>
         </div>
 
-        {/* Form Area */}
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Số điện thoại</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
-                </div>
-                <input
-                  type="text"
-                  className="block w-full pl-11 pr-4 py-3.5 bg-white/50 border border-gray-200 rounded-2xl text-gray-900 focus:bg-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-300 placeholder:text-gray-400"
-                  placeholder="Nhập số điện thoại..."
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-semibold text-gray-700">Mật khẩu</label>
-                <a href="#" className="text-sm font-medium text-orange-600 hover:text-orange-500 transition-colors">
-                  Quên mật khẩu?
-                </a>
-              </div>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
-                </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="block w-full pl-11 pr-12 py-3.5 bg-white/50 border border-gray-200 rounded-2xl text-gray-900 focus:bg-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-300 placeholder:text-gray-400"
-                  placeholder="Nhập mật khẩu..."
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none transition-all"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer transition-colors"
-            />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600 cursor-pointer select-none">
-              Duy trì đăng nhập
-            </label>
-          </div>
-
+        {/* Google Login Only Area */}
+        <div className="mt-8">
+          <p className="text-center text-gray-500 mb-6 text-sm">Vui lòng đăng nhập bằng tài khoản Google (Dành cho Quản trị viên và Giáo viên)</p>
           <button
-            type="submit"
-            disabled={isLoading}
-            className="relative w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-2xl text-base font-bold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 transform hover:-translate-y-0.5 transition-all duration-300"
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isGoogleLoading}
+            className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-2xl text-base font-bold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 transform hover:-translate-y-0.5 transition-all duration-300"
           >
-            {isLoading ? (
+            {isGoogleLoading ? (
               <>
                 <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" />
                 Đang xử lý...
               </>
             ) : (
-              'Đăng nhập vào hệ thống'
+              <>
+                <div className="bg-white p-1 rounded-full mr-3">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo" className="h-5 w-5" />
+                </div>
+                Đăng nhập bằng Google
+              </>
             )}
           </button>
-        </form>
+        </div>
 
       </div>
     </div>

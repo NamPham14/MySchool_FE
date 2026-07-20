@@ -15,6 +15,10 @@ interface LoginRequest {
   password: string;
 }
 
+interface GoogleLoginRequest {
+  email: string;
+}
+
 interface RegisterRequest {
   fullName: string;
   phoneNumber: string;
@@ -101,12 +105,22 @@ export const baseApi = createApi({
     "Fees",
     "Grades",
     "Chat",
-    "Announcements"
+    "Announcements",
+    "Clubs",
+    "ClubMembers"
   ],
   endpoints: (builder) => ({
     login: builder.mutation<APIResponse<AuthResponse>, LoginRequest>({
       query: (loginData) => ({
         url: "/v1/auth/login",
+        method: "POST",
+        body: loginData,
+      }),
+    }),
+    
+    googleLogin: builder.mutation<APIResponse<AuthResponse>, GoogleLoginRequest>({
+      query: (loginData) => ({
+        url: "/v1/auth/google-login",
         method: "POST",
         body: loginData,
       }),
@@ -153,6 +167,7 @@ export const baseApi = createApi({
 
 export const {
   useLoginMutation,
+  useGoogleLoginMutation,
   useGetMyInfoQuery,
   useRegisterMutation,
   useLogoutMutation,

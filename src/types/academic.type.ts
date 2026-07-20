@@ -81,6 +81,10 @@ export interface StudentGradeResponse {
   rollNumber: string;
   avatarUrl: string;
   gradeId?: number;
+  regularScore1?: number;
+  regularScore2?: number;
+  regularScore3?: number;
+  regularScore4?: number;
   midtermScore?: number;
   finalScore?: number;
   averageScore?: number;
@@ -90,6 +94,10 @@ export interface GradeRequest {
   studentId: number;
   subjectId: number;
   semesterId: number;
+  regularScore1?: number;
+  regularScore2?: number;
+  regularScore3?: number;
+  regularScore4?: number;
   midtermScore?: number;
   finalScore?: number;
 }

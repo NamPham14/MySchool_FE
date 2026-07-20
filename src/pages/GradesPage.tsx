@@ -16,7 +16,7 @@ const GradesPage = () => {
   const [selectedSemesterId, setSelectedSemesterId] = useState<number>(1);
   
   // Local state for editing grades
-  const [editingGrades, setEditingGrades] = useState<Record<number, { midtermScore?: number, finalScore?: number }>>({});
+  const [editingGrades, setEditingGrades] = useState<Record<number, { regularScore1?: number | string, regularScore2?: number | string, regularScore3?: number | string, regularScore4?: number | string, midtermScore?: number | string, finalScore?: number | string }>>({});
 
   const { data: classesData, isLoading: isLoadingClasses } = useGetClassesQuery({ page: 0, size: 100 });
   const { data: subjectsData, isLoading: isLoadingSubjects } = useGetSubjectsQuery({ page: 0, size: 100 });
@@ -93,6 +93,10 @@ const GradesPage = () => {
       const initialGrades: Record<number, any> = {};
       currentStudents.forEach((student: any) => {
         initialGrades[student.studentId] = {
+          regularScore1: student.regularScore1 !== undefined && student.regularScore1 !== null ? student.regularScore1 : '',
+          regularScore2: student.regularScore2 !== undefined && student.regularScore2 !== null ? student.regularScore2 : '',
+          regularScore3: student.regularScore3 !== undefined && student.regularScore3 !== null ? student.regularScore3 : '',
+          regularScore4: student.regularScore4 !== undefined && student.regularScore4 !== null ? student.regularScore4 : '',
           midtermScore: student.midtermScore !== undefined && student.midtermScore !== null ? student.midtermScore : '',
           finalScore: student.finalScore !== undefined && student.finalScore !== null ? student.finalScore : ''
         };
@@ -103,7 +107,7 @@ const GradesPage = () => {
     }
   }, [gradesData]);
 
-  const handleGradeChange = (studentId: number, field: 'midtermScore' | 'finalScore', value: string) => {
+  const handleGradeChange = (studentId: number, field: 'regularScore1'|'regularScore2'|'regularScore3'|'regularScore4'|'midtermScore' | 'finalScore', value: string) => {
     // Allows empty string or valid numbers between 0 and 10
     if (value !== '' && (isNaN(Number(value)) || Number(value) < 0 || Number(value) > 10)) {
       return;
@@ -131,6 +135,10 @@ const GradesPage = () => {
       studentId,
       subjectId: selectedSubjectId,
       semesterId: selectedSemesterId,
+      regularScore1: grades.regularScore1 === '' ? null : Number(grades.regularScore1),
+      regularScore2: grades.regularScore2 === '' ? null : Number(grades.regularScore2),
+      regularScore3: grades.regularScore3 === '' ? null : Number(grades.regularScore3),
+      regularScore4: grades.regularScore4 === '' ? null : Number(grades.regularScore4),
       midtermScore: grades.midtermScore === '' ? null : Number(grades.midtermScore),
       finalScore: grades.finalScore === '' ? null : Number(grades.finalScore),
     };
@@ -160,6 +168,10 @@ const GradesPage = () => {
         studentId: student.studentId,
         subjectId: selectedSubjectId,
         semesterId: selectedSemesterId,
+        regularScore1: grades.regularScore1 === '' ? null : Number(grades.regularScore1),
+        regularScore2: grades.regularScore2 === '' ? null : Number(grades.regularScore2),
+        regularScore3: grades.regularScore3 === '' ? null : Number(grades.regularScore3),
+        regularScore4: grades.regularScore4 === '' ? null : Number(grades.regularScore4),
         midtermScore: grades.midtermScore === '' ? null : Number(grades.midtermScore),
         finalScore: grades.finalScore === '' ? null : Number(grades.finalScore),
       };
@@ -188,10 +200,16 @@ const GradesPage = () => {
     const local = editingGrades[student.studentId];
     if (!local) return false;
     
+    const currentR1 = student.regularScore1 !== undefined && student.regularScore1 !== null ? student.regularScore1 : '';
+    const currentR2 = student.regularScore2 !== undefined && student.regularScore2 !== null ? student.regularScore2 : '';
+    const currentR3 = student.regularScore3 !== undefined && student.regularScore3 !== null ? student.regularScore3 : '';
+    const currentR4 = student.regularScore4 !== undefined && student.regularScore4 !== null ? student.regularScore4 : '';
     const currentMid = student.midtermScore !== undefined && student.midtermScore !== null ? student.midtermScore : '';
     const currentFin = student.finalScore !== undefined && student.finalScore !== null ? student.finalScore : '';
     
-    return local.midtermScore !== currentMid || local.finalScore !== currentFin;
+    return local.midtermScore !== currentMid || local.finalScore !== currentFin ||
+           local.regularScore1 !== currentR1 || local.regularScore2 !== currentR2 ||
+           local.regularScore3 !== currentR3 || local.regularScore4 !== currentR4;
   };
 
   const anyChanges = students.some(hasChanges);
@@ -343,11 +361,15 @@ const GradesPage = () => {
               <thead className="bg-white text-gray-500 font-semibold border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 w-16 text-center">STT</th>
-                  <th className="px-6 py-4">Học sinh</th>
-                  <th className="px-6 py-4 w-32 text-center">Điểm Giữa Kỳ<br/><span className="text-xs font-normal text-gray-400">(Trọng số: 40%)</span></th>
-                  <th className="px-6 py-4 w-32 text-center">Điểm Cuối Kỳ<br/><span className="text-xs font-normal text-gray-400">(Trọng số: 60%)</span></th>
-                  <th className="px-6 py-4 w-32 text-center">Trung Bình<br/><span className="text-xs font-normal text-orange-500 font-medium">Hệ thống tính</span></th>
-                  <th className="px-6 py-4 w-24 text-center">Thao tác</th>
+                  <th className="px-6 py-4 min-w-[200px]">Học sinh</th>
+                  <th className="px-2 py-4 w-20 text-center">Điểm TX 1</th>
+                  <th className="px-2 py-4 w-20 text-center">Điểm TX 2</th>
+                  <th className="px-2 py-4 w-20 text-center">Điểm TX 3</th>
+                  <th className="px-2 py-4 w-20 text-center">Điểm TX 4</th>
+                  <th className="px-4 py-4 w-28 text-center">Điểm Giữa Kỳ<br/><span className="text-xs font-normal text-gray-400">(40%)</span></th>
+                  <th className="px-4 py-4 w-28 text-center">Điểm Cuối Kỳ<br/><span className="text-xs font-normal text-gray-400">(60%)</span></th>
+                  <th className="px-4 py-4 w-24 text-center">Trung Bình<br/><span className="text-xs font-normal text-orange-500 font-medium">Hệ thống</span></th>
+                  <th className="px-4 py-4 w-20 text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -375,9 +397,61 @@ const GradesPage = () => {
                           </div>
                         </div>
                       </td>
+
+                      {/* Regular Score 1 */}
+                      <td className="px-2 py-4">
+                        <input
+                          type="number" step="0.1" min="0" max="10"
+                          value={localState.regularScore1 !== undefined ? localState.regularScore1 : ''}
+                          onChange={(e) => handleGradeChange(student.studentId, 'regularScore1', e.target.value)}
+                          className={`w-14 mx-auto block text-center border rounded-lg py-1.5 focus:ring-2 focus:outline-none font-medium transition-colors ${
+                            localState.regularScore1 !== (student.regularScore1 ?? '') ? 'border-orange-400 bg-orange-50 text-orange-700 focus:ring-orange-500' : 'border-gray-200 text-gray-900 focus:border-orange-500 focus:ring-orange-500'
+                          }`}
+                          placeholder="-"
+                        />
+                      </td>
+
+                      {/* Regular Score 2 */}
+                      <td className="px-2 py-4">
+                        <input
+                          type="number" step="0.1" min="0" max="10"
+                          value={localState.regularScore2 !== undefined ? localState.regularScore2 : ''}
+                          onChange={(e) => handleGradeChange(student.studentId, 'regularScore2', e.target.value)}
+                          className={`w-14 mx-auto block text-center border rounded-lg py-1.5 focus:ring-2 focus:outline-none font-medium transition-colors ${
+                            localState.regularScore2 !== (student.regularScore2 ?? '') ? 'border-orange-400 bg-orange-50 text-orange-700 focus:ring-orange-500' : 'border-gray-200 text-gray-900 focus:border-orange-500 focus:ring-orange-500'
+                          }`}
+                          placeholder="-"
+                        />
+                      </td>
+
+                      {/* Regular Score 3 */}
+                      <td className="px-2 py-4">
+                        <input
+                          type="number" step="0.1" min="0" max="10"
+                          value={localState.regularScore3 !== undefined ? localState.regularScore3 : ''}
+                          onChange={(e) => handleGradeChange(student.studentId, 'regularScore3', e.target.value)}
+                          className={`w-14 mx-auto block text-center border rounded-lg py-1.5 focus:ring-2 focus:outline-none font-medium transition-colors ${
+                            localState.regularScore3 !== (student.regularScore3 ?? '') ? 'border-orange-400 bg-orange-50 text-orange-700 focus:ring-orange-500' : 'border-gray-200 text-gray-900 focus:border-orange-500 focus:ring-orange-500'
+                          }`}
+                          placeholder="-"
+                        />
+                      </td>
+
+                      {/* Regular Score 4 */}
+                      <td className="px-2 py-4">
+                        <input
+                          type="number" step="0.1" min="0" max="10"
+                          value={localState.regularScore4 !== undefined ? localState.regularScore4 : ''}
+                          onChange={(e) => handleGradeChange(student.studentId, 'regularScore4', e.target.value)}
+                          className={`w-14 mx-auto block text-center border rounded-lg py-1.5 focus:ring-2 focus:outline-none font-medium transition-colors ${
+                            localState.regularScore4 !== (student.regularScore4 ?? '') ? 'border-orange-400 bg-orange-50 text-orange-700 focus:ring-orange-500' : 'border-gray-200 text-gray-900 focus:border-orange-500 focus:ring-orange-500'
+                          }`}
+                          placeholder="-"
+                        />
+                      </td>
                       
                       {/* Midterm Input */}
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <input
                           type="number"
                           step="0.1"
@@ -403,7 +477,7 @@ const GradesPage = () => {
                           max="10"
                           value={localState.finalScore !== undefined ? localState.finalScore : ''}
                           onChange={(e) => handleGradeChange(student.studentId, 'finalScore', e.target.value)}
-                          className={`w-20 mx-auto block text-center border rounded-lg py-2 focus:ring-2 focus:outline-none font-medium transition-colors ${
+                          className={`w-16 mx-auto block text-center border rounded-lg py-1.5 focus:ring-2 focus:outline-none font-medium transition-colors ${
                             localState.finalScore !== (student.finalScore ?? '') 
                               ? 'border-orange-400 bg-orange-50 text-orange-700 focus:ring-orange-500' 
                               : 'border-gray-200 text-gray-900 focus:border-orange-500 focus:ring-orange-500'
@@ -413,7 +487,7 @@ const GradesPage = () => {
                       </td>
                       
                       {/* Average Score (Readonly) */}
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-4 py-4 text-center">
                         {student.averageScore !== undefined && student.averageScore !== null ? (
                           <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg ${
                             student.averageScore >= 8.0 ? 'bg-green-100 text-green-700' :

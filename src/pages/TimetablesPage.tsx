@@ -7,11 +7,14 @@ import {
   useCreateScheduleMutation,
   useUpdateScheduleMutation,
   useDeleteScheduleMutation,
-  useGetTeachersQuery
+  useGetTeachersQuery,
+  useImportTimetableMutation
 } from '../store/api/academicApi';
-import { Calendar, Clock, MapPin, User, BookOpen, Plus, X, Edit2, Trash2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, BookOpen, Plus, X, Edit2, Trash2, Download, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
 
 const DAYS = [
   { value: 2, label: 'Thứ 2' },
@@ -25,6 +28,10 @@ const DAYS = [
 const PERIODS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
 const TimetablesPage = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const roles = user?.roles ? (Array.isArray(user.roles) ? user.roles.map((r: any) => typeof r === 'string' ? r : r.name) : []) : [];
+  const isAdmin = roles.includes('ADMIN') || roles.includes('ROLE_ADMIN');
+
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
 
   // States for Modal
@@ -53,6 +60,9 @@ const TimetablesPage = () => {
   const [createSchedule, { isLoading: isCreating }] = useCreateScheduleMutation();
   const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
   const [deleteSchedule, { isLoading: isDeleting }] = useDeleteScheduleMutation();
+  const [importTimetable, { isLoading: isImporting }] = useImportTimetableMutation();
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const schedules = scheduleData?.data || [];
 
@@ -154,6 +164,27 @@ const TimetablesPage = () => {
     });
   };
 
+  const handleExportTemplate = () => {
+    window.location.href = 'http://localhost:8080/api/schedules/export/template';
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const overwrite = window.confirm('Lưu ý: Bạn có muốn XÓA SẠCH lịch cũ của các lớp có trong file để GHI ĐÈ bằng lịch mới không? (Bấm OK để Xóa lịch cũ, Bấm Cancel để Gộp chung)');
+    
+    const loadingToast = toast.loading('Đang xử lý file Excel...');
+    try {
+      const res = await importTimetable({ file, overwrite }).unwrap();
+      toast.success(res.message || 'Nhập thời khóa biểu thành công!', { id: loadingToast });
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Có lỗi xảy ra khi đọc file Excel', { id: loadingToast });
+    }
+    
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -180,14 +211,42 @@ const TimetablesPage = () => {
             )}
           </div>
 
-          <button 
-            onClick={handleOpenCreate}
-            disabled={!selectedClassId}
-            className="flex items-center px-4 py-2.5 bg-orange-600 text-white font-medium text-sm rounded-xl hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Xếp lịch mới
-          </button>
+          {isAdmin && (
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={handleExportTemplate}
+                className="flex items-center px-4 py-2.5 bg-green-600 text-white font-medium text-sm rounded-xl hover:bg-green-700 transition-colors shadow-sm"
+              >
+                <Download className="h-5 w-5 mr-2" />
+                Tải Template
+              </button>
+              
+              <input 
+                type="file" 
+                accept=".xlsx, .xls" 
+                ref={fileInputRef} 
+                onChange={handleImport} 
+                className="hidden" 
+              />
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isImporting}
+                className="flex items-center px-4 py-2.5 bg-blue-600 text-white font-medium text-sm rounded-xl hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50"
+              >
+                <Upload className="h-5 w-5 mr-2" />
+                {isImporting ? 'Đang Import...' : 'Import Excel'}
+              </button>
+
+              <button 
+                onClick={handleOpenCreate}
+                disabled={!selectedClassId}
+                className="flex items-center px-4 py-2.5 bg-orange-600 text-white font-medium text-sm rounded-xl hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Xếp lịch mới
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -242,14 +301,16 @@ const TimetablesPage = () => {
                               {schedule.startTime?.slice(0, 5)} - {schedule.endTime?.slice(0, 5)}
                             </div>
                             
-                            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => handleOpenEdit(schedule)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button onClick={() => setDeleteId(schedule.id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
+                            {isAdmin && (
+                              <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleOpenEdit(schedule)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => setDeleteId(schedule.id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                           
                           <h4 className="font-bold text-gray-900 mb-1 flex items-center">

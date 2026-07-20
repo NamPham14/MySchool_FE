@@ -7,6 +7,7 @@ import SubjectsPage from './pages/SubjectsPage';
 import TimetablesPage from './pages/TimetablesPage';
 import AssignmentsPage from './pages/AssignmentsPage';
 import GradesPage from './pages/GradesPage';
+import ClubsPage from './pages/ClubsPage';
 import StudentsPage from './pages/StudentsPage';
 import TeachersPage from './pages/TeachersPage';
 import LeavesPage from './pages/LeavesPage';
@@ -52,6 +53,7 @@ function App() {
             <Route path="/timetables" element={<TimetablesPage />} />
             <Route path="/assignments" element={<AssignmentsPage />} />
             <Route path="/grades" element={<GradesPage />} />
+            <Route path="/clubs" element={<ClubsPage />} />
             <Route path="/leaves" element={<LeavesPage />} />
             <Route path="/fees" element={<FeesPage />} />
             <Route path="/events" element={<EventsPage />} />

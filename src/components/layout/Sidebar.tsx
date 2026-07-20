@@ -12,8 +12,12 @@ import {
   CreditCard,
   MessageSquare,
   Calendar,
-  Megaphone
+  Megaphone,
+  Tent
 } from 'lucide-react';
+
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/store';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -33,10 +37,52 @@ export const NAV_ITEMS = [
   { path: '/fees', icon: CreditCard, label: 'Học phí' },
   { path: '/events', icon: Calendar, label: 'Sự kiện' },
   { path: '/announcements', icon: Megaphone, label: 'Bảng tin Lớp' },
+  { path: '/clubs', icon: Tent, label: 'Câu lạc bộ' },
   { path: '/notifications', icon: Bell, label: 'Thông báo' },
 ];
 
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
+  const user = useSelector((state: RootState) => state.auth.user);
+  
+  // Extract roles array of strings depending on how it's stored
+  const roles = user?.roles ? 
+    (Array.isArray(user.roles) 
+      ? user.roles.map((r: any) => typeof r === 'string' ? r : r.name) 
+      : []) 
+    : [];
+
+  const isAdmin = roles.includes('ADMIN') || roles.includes('ROLE_ADMIN');
+  const isTeacher = roles.includes('TEACHER') || roles.includes('ROLE_TEACHER');
+  const isStudent = roles.includes('STUDENT') || roles.includes('ROLE_STUDENT');
+
+  const filteredNavItems = NAV_ITEMS.filter(item => {
+    if (isAdmin) {
+      // Admin thấy hết (hoặc có thể ẩn bớt một số cái riêng tư của học sinh nếu muốn)
+      return true; 
+    }
+    if (isTeacher) {
+      // Giáo viên thấy các chức năng giảng dạy và quản lý lớp
+      const teacherAllowed = [
+        '/dashboard', '/students', '/timetables', 
+        '/assignments', '/grades', '/leaves', 
+        '/events', '/announcements', '/clubs', '/notifications'
+      ];
+      return teacherAllowed.includes(item.path);
+    }
+    if (isStudent) {
+      // Học sinh thấy các chức năng học tập
+      const studentAllowed = [
+        '/dashboard', '/timetables', '/assignments', 
+        '/grades', '/leaves', '/fees', 
+        '/events', '/announcements', '/clubs', '/notifications'
+      ];
+      return studentAllowed.includes(item.path);
+    }
+    // Role phụ huynh (nếu có sau này)
+    const parentAllowed = ['/dashboard', '/grades', '/leaves', '/fees', '/timetables', '/events', '/notifications'];
+    return parentAllowed.includes(item.path);
+  });
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -60,7 +106,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
         {/* Navigation Links */}
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
-          {NAV_ITEMS.map((item) => (
+          {filteredNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { useGetClassesQuery, useCreateClassMutation, useUpdateClassMutation, useDeleteClassMutation } from '../store/api/academicApi';
-import { Plus, Search, Edit2, Users, X } from 'lucide-react';
+import { Plus, Search, Edit2, Users, X, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 
@@ -51,6 +51,17 @@ const ClassesPage = () => {
       setIsModalOpen(false);
     } catch (err: any) {
       toast.error(err?.data?.message || 'Có lỗi xảy ra khi lưu');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa lớp học này không? Cảnh báo: Nếu lớp đang có học sinh hoặc thời khóa biểu thì không thể xóa!')) {
+      try {
+        await deleteClass(id).unwrap();
+        toast.success('Xóa lớp học thành công!');
+      } catch (err: any) {
+        toast.error(err?.data?.message || 'Không thể xóa lớp học này (có thể do lớp đang có dữ liệu ràng buộc)');
+      }
     }
   };
 
@@ -141,6 +152,9 @@ const ClassesPage = () => {
                         <div className="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => handleOpenEdit(item)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors tooltip" title="Sửa">
                             <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => handleDelete(item.id)} disabled={isDeleting} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors tooltip" title="Xóa">
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
