@@ -61,12 +61,36 @@ export const academicApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Classes"],
     }),
-    getSemesters: builder.query<SemesterPageResponse, { page?: number; size?: number }>({
-      query: (params) => ({
-        url: "/semesters",
-        params,
-      }),
+    getSemesters: builder.query<APIResponse<any>, { search?: string; page?: number; size?: number }>({
+      query: ({ search, page = 0, size = 100 }) => {
+        let qs = `?page=${page}&size=${size}`;
+        if (search) qs += `&search=${search}`;
+        return `/semesters${qs}`;
+      },
       providesTags: ["Semesters"],
+    }),
+    createSemester: builder.mutation<APIResponse<any>, any>({
+      query: (body) => ({
+        url: `/semesters`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Semesters"],
+    }),
+    updateSemester: builder.mutation<APIResponse<any>, { id: number; data: any }>({
+      query: ({ id, data }) => ({
+        url: `/semesters/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Semesters"],
+    }),
+    deleteSemester: builder.mutation<APIResponse<any>, number>({
+      query: (id) => ({
+        url: `/semesters/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Semesters"],
     }),
     getSubjects: builder.query<SubjectPageResponse, { page?: number; size?: number }>({
       query: (params) => ({
@@ -276,6 +300,21 @@ export const academicApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Fees"],
     }),
+    updateInvoice: builder.mutation<APIResponse<any>, { id: number; data: { title: string, amount: number, dueDate: string } }>({
+      query: ({ id, data }) => ({
+        url: `/fees/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Fees"],
+    }),
+    deleteInvoice: builder.mutation<APIResponse<any>, number>({
+      query: (id) => ({
+        url: `/fees/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Fees"],
+    }),
     
     // Events API
     getEventCategories: builder.query<APIResponse<any[]>, void>({
@@ -390,6 +429,9 @@ export const academicApi = baseApi.injectEndpoints({
 export const {
   useGetClassesQuery,
   useGetSemestersQuery,
+  useCreateSemesterMutation,
+  useUpdateSemesterMutation,
+  useDeleteSemesterMutation,
   useGetSubjectsQuery,
   useCreateClassMutation,
   useUpdateClassMutation,
@@ -417,6 +459,8 @@ export const {
   useReviewLeaveMutation,
   useGetAllInvoicesQuery,
   useGenerateInvoicesMutation,
+  useUpdateInvoiceMutation,
+  useDeleteInvoiceMutation,
   useGetAllEventsQuery,
   useGetEventCategoriesQuery,
   useCreateEventMutation,

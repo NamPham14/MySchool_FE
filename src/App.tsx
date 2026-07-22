@@ -12,6 +12,7 @@ import StudentsPage from './pages/StudentsPage';
 import TeachersPage from './pages/TeachersPage';
 import LeavesPage from './pages/LeavesPage';
 import FeesPage from './pages/FeesPage';
+import SemestersPage from './pages/SemestersPage';
 import EventsPage from './pages/EventsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import DashboardPage from './pages/DashboardPage';
@@ -56,6 +57,7 @@ function App() {
             <Route path="/clubs" element={<ClubsPage />} />
             <Route path="/leaves" element={<LeavesPage />} />
             <Route path="/fees" element={<FeesPage />} />
+            <Route path="/semesters" element={<SemestersPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/notifications" element={<div className="p-4 bg-white rounded-2xl shadow-sm h-96 flex items-center justify-center text-gray-400">Thông báo sẽ hiển thị ở đây</div>} />

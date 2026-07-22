@@ -3,9 +3,11 @@ import {
   useGetClassesQuery, 
   useGetAllInvoicesQuery,
   useGenerateInvoicesMutation,
-  useGetSemestersQuery
+  useGetSemestersQuery,
+  useUpdateInvoiceMutation,
+  useDeleteInvoiceMutation
 } from '../store/api/academicApi';
-import { CreditCard, CheckCircle, XCircle, AlertCircle, Search, Filter, Calendar, Hash, User, DollarSign, Plus } from 'lucide-react';
+import { CreditCard, CheckCircle, XCircle, AlertCircle, Search, Filter, Calendar, Hash, DollarSign, Plus, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const FeesPage = () => {
@@ -22,9 +24,19 @@ const FeesPage = () => {
     dueDate: ''
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingInvoiceId, setEditingInvoiceId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    amount: '',
+    dueDate: ''
+  });
+
   const { data: classesData, isLoading: isLoadingClasses } = useGetClassesQuery({ page: 0, size: 100 });
   const { data: semestersData, isLoading: isLoadingSemesters } = useGetSemestersQuery({ page: 0, size: 100 });
   const [generateInvoices, { isLoading: isGenerating }] = useGenerateInvoicesMutation();
+  const [updateInvoice, { isLoading: isUpdating }] = useUpdateInvoiceMutation();
+  const [deleteInvoice] = useDeleteInvoiceMutation();
   
   const { data: invoicesData, isLoading: isLoadingInvoices } = useGetAllInvoicesQuery({
     semesterId: selectedSemester,
@@ -74,9 +86,48 @@ const FeesPage = () => {
       }).unwrap();
       toast.success("Phát sinh hóa đơn thành công!");
       setIsModalOpen(false);
-      // Optional: refetch invoices if we had a refetch function, but RTK query invalidates tags automatically
     } catch (err: any) {
       toast.error(err?.data?.message || "Có lỗi xảy ra khi tạo hóa đơn");
+    }
+  };
+
+  const handleEditClick = (invoice: any) => {
+    setEditingInvoiceId(invoice.id);
+    setEditForm({
+      title: invoice.title,
+      amount: invoice.amount.toString(),
+      dueDate: invoice.dueDate
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInvoiceId) return;
+    try {
+      await updateInvoice({
+        id: editingInvoiceId,
+        data: {
+          title: editForm.title,
+          amount: Number(editForm.amount),
+          dueDate: editForm.dueDate
+        }
+      }).unwrap();
+      toast.success("Cập nhật hóa đơn thành công!");
+      setIsEditModalOpen(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Lỗi khi cập nhật");
+    }
+  };
+
+  const handleDeleteInvoice = async (id: number) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa hóa đơn này?")) {
+      try {
+        await deleteInvoice(id).unwrap();
+        toast.success("Xóa hóa đơn thành công!");
+      } catch (err: any) {
+        toast.error(err?.data?.message || "Lỗi khi xóa. (Chỉ có thể xóa hóa đơn chưa thanh toán)");
+      }
     }
   };
 
@@ -202,6 +253,7 @@ const FeesPage = () => {
                   <th className="px-6 py-4">Học phí / Đã đóng</th>
                   <th className="px-6 py-4">Hạn nộp</th>
                   <th className="px-6 py-4 text-center">Trạng thái</th>
+                  <th className="px-6 py-4 text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -240,6 +292,24 @@ const FeesPage = () => {
                     </td>
                     <td className="px-6 py-4 text-center">
                       {getStatusBadge(invoice.status)}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => handleEditClick(invoice)}
+                          className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteInvoice(invoice.id)}
+                          className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                          title="Xóa hóa đơn"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -361,6 +431,80 @@ const FeesPage = () => {
                   ) : (
                     "Tạo ngay"
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Invoice Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <Edit2 className="w-5 h-5 mr-2 text-blue-500" />
+                Chỉnh sửa hóa đơn
+              </h3>
+              <button 
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-gray-400 hover:text-gray-500 transition-colors"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateInvoice} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1">Nội dung / Tiêu đề *</label>
+                <input
+                  required
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 font-medium bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1">Số tiền (VNĐ) *</label>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={editForm.amount}
+                  onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 font-medium bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1">Hạn nộp *</label>
+                <input
+                  required
+                  type="date"
+                  value={editForm.dueDate}
+                  onChange={(e) => setEditForm({...editForm, dueDate: e.target.value})}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 font-medium bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition-colors text-sm"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 text-sm flex items-center"
+                >
+                  {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
               </div>
             </form>

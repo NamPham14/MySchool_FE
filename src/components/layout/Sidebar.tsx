@@ -13,7 +13,8 @@ import {
   MessageSquare,
   Calendar,
   Megaphone,
-  Tent
+  Tent,
+  Layers
 } from 'lucide-react';
 
 import { useSelector } from 'react-redux';
@@ -38,6 +39,7 @@ export const NAV_ITEMS = [
   { path: '/events', icon: Calendar, label: 'Sự kiện' },
   { path: '/announcements', icon: Megaphone, label: 'Bảng tin Lớp' },
   { path: '/clubs', icon: Tent, label: 'Câu lạc bộ' },
+  { path: '/semesters', icon: Layers, label: 'Quản lý Học kỳ' },
   { path: '/notifications', icon: Bell, label: 'Thông báo' },
 ];
 
